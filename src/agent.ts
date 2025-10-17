@@ -12,6 +12,9 @@ import type {
   Search,
 } from "./types.js";
 
+const USE_OPENROUTER = Bun.env.USE_OPENROUTER === "true";
+const OPENROUTER_API_KEY = Bun.env.OPENROUTER_API_KEY;
+
 // Parse command line arguments
 const args = process.argv.slice(2);
 const AGENT_NAME = args.find((arg) => !arg.startsWith("--")) || "Assistant";
@@ -52,6 +55,30 @@ Respond naturally and conversationally. Keep responses concise.
 
 Feel empowered to be chatty and ask follow-up questions.
 `;
+  }
+
+  private async callOpenRouter(messages: any[], jsonMode = false): Promise<string> {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: messages,
+        temperature: 0.3,
+        max_tokens: jsonMode ? 100 : this.responseLength + 50,
+        ...(jsonMode && { response_format: { type: "json_object" } }),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenRouter API error: ${response.statusText}`);
+    }
+
+    const data: any = await response.json();
+    return data.choices[0].message.content;
   }
 
   async connect(): Promise<void> {
@@ -138,9 +165,41 @@ Feel empowered to be chatty and ask follow-up questions.
     // search for additional context
     // response directly
     try {
-      const response = await this.ollama.generate({
-        model: MODEL,
-        prompt: `You are ${this.agentName} in a group chat. Based on the recent conversation and the latest message, decide if you should respond.
+      let responseText: string;
+
+      if (USE_OPENROUTER) {
+        responseText = await this.callOpenRouter([
+          {
+            role: "user",
+            content: `You are ${this.agentName} in a group chat. Based on the recent conversation and the latest message, decide if you should respond.
+
+Recent conversation, summary, and/or peer information:
+${recentContext}
+
+Latest message from ${message.username}: "${message.content}"
+
+You have 3 different tools you can use to gather more context before responding. They are
+
+1. Analyze the psychology - This lets you ask a question to a model of an agent to better understand them and learn how to respond appropriately
+
+2. Search for additional context - This lets you search the conversation history with a query 
+
+3. Respond directly - This lets you respond directly to the user
+
+Respond with a JSON object with this exact format:
+{
+  "decision": psychology or search or respond,
+  "reason": "brief explanation",
+  "confidence": 0.0 to 1.0
+}
+
+JSON response:`
+          }
+        ], true);
+      } else {
+        const response = await this.ollama.generate({
+          model: MODEL,
+          prompt: `You are ${this.agentName} in a group chat. Based on the recent conversation and the latest message, decide if you should respond.
 
 Recent conversation, summary, and/or peer information:
 ${recentContext}
@@ -163,15 +222,17 @@ Respond with a JSON object with this exact format:
 }
 
 JSON response:`,
-        format: "json",
-        options: {
-          temperature: 0.3,
-          num_predict: 100,
-        },
-      });
+          format: "json",
+          options: {
+            temperature: 0.3,
+            num_predict: 100,
+          },
+        });
+        responseText = response.response;
+      }
 
       // Parse the response
-      const decision = JSON.parse(response.response) as AgentDecision;
+      const decision = JSON.parse(responseText) as AgentDecision;
 
       if (
         decision.decision === "psychology" &&
@@ -216,9 +277,41 @@ JSON response:`,
     recentContext: string,
   ): Promise<ResponseDecision> {
     try {
-      const response = await this.ollama.generate({
-        model: MODEL,
-        prompt: `You are ${this.agentName} in a group chat. Based on the recent conversation and the latest message, decide if you should respond.
+      let responseText: string;
+
+      if (USE_OPENROUTER) {
+        responseText = await this.callOpenRouter([
+          {
+            role: "user",
+            content: `You are ${this.agentName} in a group chat. Based on the recent conversation and the latest message, decide if you should respond.
+
+Recent conversation, summary, and/or peer information:
+${recentContext}
+
+Latest message from ${message.username}: "${message.content}"
+
+Respond with a JSON object with this exact format:
+{
+  "should_respond": true or false,
+  "reason": "brief explanation",
+  "confidence": 0.0 to 1.0
+}
+
+Consider:
+- Is the message directed at you or mentioning you?
+- Is it a question that needs answering?
+- Would your response add value to the conversation?
+- Have you responded too much recently?
+
+lean on the side of responding and keeping the conversation going
+
+JSON response:`
+          }
+        ], true);
+      } else {
+        const response = await this.ollama.generate({
+          model: MODEL,
+          prompt: `You are ${this.agentName} in a group chat. Based on the recent conversation and the latest message, decide if you should respond.
 
 Recent conversation, summary, and/or peer information:
 ${recentContext}
@@ -241,15 +334,17 @@ Consider:
 lean on the side of responding and keeping the conversation going
 
 JSON response:`,
-        format: "json",
-        options: {
-          temperature: 0.3,
-          num_predict: 100,
-        },
-      });
+          format: "json",
+          options: {
+            temperature: 0.3,
+            num_predict: 100,
+          },
+        });
+        responseText = response.response;
+      }
 
       // Parse the response
-      const decision = JSON.parse(response.response) as ResponseDecision;
+      const decision = JSON.parse(responseText) as ResponseDecision;
       return decision;
     } catch (error) {
       console.error("Error in decision making:", error);
@@ -371,22 +466,26 @@ Please respond naturally as ${this.agentName}.`,
         },
       ];
 
-      const response = await this.ollama.chat({
-        model: MODEL,
-        messages: messages,
-        options: {
-          temperature: this.temperature,
-          num_predict: this.responseLength + 50, // Extra tokens for tool calls
-        },
-      });
+      let responseContent: string;
 
-      // Debug logging
-      console.log("Ollama response:", JSON.stringify(response, null, 2));
-
-      const responseContent = response.message?.content?.trim();
+      if (USE_OPENROUTER) {
+        responseContent = await this.callOpenRouter(messages, false);
+        console.log("OpenRouter response:", responseContent);
+      } else {
+        const response = await this.ollama.chat({
+          model: MODEL,
+          messages: messages,
+          options: {
+            temperature: this.temperature,
+            num_predict: this.responseLength + 50, // Extra tokens for tool calls
+          },
+        });
+        console.log("Ollama response:", JSON.stringify(response, null, 2));
+        responseContent = response.message?.content?.trim() || "";
+      }
 
       if (!responseContent) {
-        console.error("Empty response from Ollama - full response:", response);
+        console.error("Empty response from model");
         console.error("Model used:", MODEL);
         return;
       }

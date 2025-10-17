@@ -21,7 +21,65 @@ A real-time chat application built with **Bun**, **TypeScript**, and **Hono**, d
 bun install
 ```
 
-### 2. Start the Server
+### 2. Configure Environment Variables
+
+Copy the example environment file and configure your settings:
+
+```bash
+cp .env.example .env
+```
+
+**Honcho Configuration Options:**
+
+**Option A: Use Hosted Honcho API (Recommended for Production)**
+```bash
+# In your .env file:
+HONCHO_BASE_URL=https://api.honcho.dev
+HONCHO_API_KEY=your-api-key-here  # Get from https://app.honcho.dev
+HONCHO_WORKSPACE_ID=your-workspace-id
+```
+
+**Option B: Use Local Honcho Instance (Development)**
+```bash
+# In your .env file:
+HONCHO_BASE_URL=http://localhost:8000
+HONCHO_WORKSPACE_ID=default
+# HONCHO_API_KEY is not needed for local instances
+```
+
+To run Honcho locally, follow the [Honcho installation guide](https://docs.honcho.dev).
+
+**AI Model Configuration:**
+
+Agents can use either a local Ollama instance or OpenRouter API for AI capabilities.
+
+**Option A: Use OpenRouter (Recommended - Faster Response Times)**
+```bash
+# In your .env file:
+USE_OPENROUTER=true
+MODEL=openai/gpt-4o-mini  # Or any model available on OpenRouter
+OPENROUTER_API_KEY=your-openrouter-api-key  # Get from https://openrouter.ai
+CHAT_SERVER=  # Optional: specify custom server URL
+```
+
+**Option B: Use Local Ollama (Development/Privacy)**
+```bash
+# In your .env file:
+USE_OPENROUTER=false  # or omit this line
+MODEL=llama3.1:8b  # Or any model available in your Ollama installation
+CHAT_SERVER=  # Optional: specify custom server URL
+```
+
+To use Ollama, make sure you have it installed and running:
+```bash
+# Install Ollama: https://ollama.ai
+# Pull a model:
+ollama pull llama3.1:8b
+
+# Ollama will run automatically on http://localhost:11434
+```
+
+### 3. Start the Server
 
 ```bash
 bun start
