@@ -17,7 +17,7 @@ const OPENROUTER_API_KEY = Bun.env.OPENROUTER_API_KEY;
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-const AGENT_NAME = args.find((arg) => !arg.startsWith("--")) || "Assistant";
+const AGENT_NAME = args.find((arg) => !arg.startsWith("--")) || "RoboAssistant";
 const serverArg = args.find((arg) => arg.startsWith("--server="));
 const SERVER_URL = serverArg
   ? serverArg.split("=")[1]
@@ -96,10 +96,10 @@ Feel empowered to be chatty and ask follow-up questions.
     this.socket.on("connect", () => {
       console.log("✅ Connected to chat server");
 
-      // Register as a regular user (not as agent type)
+      // Register as an agent
       this.socket!.emit("register", {
         username: this.agentName,
-        type: "user",
+        type: "agent",
       });
     });
 
