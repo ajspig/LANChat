@@ -173,11 +173,22 @@ None currently blocking core functionality
 **Rationale**: Shouldn't require all services for basic functionality
 **Outcome**: Easier development and testing
 
-### Current Phase: Refinement
+### Phase 6: Frontend Architecture Decision
+**Decision**: Build single session frontend (one chat interface per server instance)
+**Rationale**: 
+- Matches current backend design (one server = one Honcho session)
+- Simpler architecture for initial implementation
+- Focus on making one great chat interface first
+- Can scale to multi-session support later (v2)
+**Outcome**: TBD - Frontend development starting
+**Alternative Considered**: Multi-session frontend (Slack/Discord-like) was considered but deferred to v2 due to required backend changes (session management, Socket.io rooms, listing endpoints)
+
+### Current Phase: Frontend Development
 **Focus**: 
-- Improving agent decision quality
-- Creating diverse sample agents
-- Documenting system for others
+- Building single session web interface
+- Real-time message display
+- User/agent presence indicators
+- Clean, functional UI
 
 ## Completed Milestones 🎯
 
@@ -261,15 +272,16 @@ None currently blocking core functionality
 ## Future Roadmap 🗺️
 
 ### Short Term (1-2 weeks)
+- **Single session web frontend** (In Progress)
 - Add chat history limiting
 - Create more sample agents
 - Improve error messages
 - Add basic testing
 
 ### Medium Term (1-2 months)
-- Web-based UI
+- Complete and polish web UI
 - Cloud LLM integration (Claude/GPT)
-- Multi-room support
+- Multi-session support (v2 - multiple chat rooms)
 - Agent collaboration features
 
 ### Long Term (3+ months)
