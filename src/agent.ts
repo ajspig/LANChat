@@ -172,14 +172,18 @@ Feel empowered to be chatty and ask follow-up questions.
       await session.addPeers([agentPeer]);
       
       // Configure observation behavior based on agent type
-      if (this.agentName === "Socrates") {
-        // Socrates observes others but they can't observe him
+      if (this.agentName === "WellnessCoach") {
+        // WellnessCoach observes others to understand their holistic wellness needs
         await session.setPeerConfig(agentPeer, { observeOthers: true, observeMe: false });
-        console.log(`🧠 Configured Socrates: observes others, but is not observed`);
-      } else if (this.agentName === "BudgetBuddy") {
-        // BudgetBuddy doesn't observe Socrates, but others can observe it
-        await session.setPeerConfig(agentPeer, { observeOthers: false, observeMe: true });
-        console.log(`💰 Configured BudgetBuddy: does not observe others, but can be observed`);
+        console.log(`🌟 Configured WellnessCoach: observes and can be observed`);
+      } else if (this.agentName === "NutritionExpert") {
+        // NutritionExpert observes to understand eating patterns
+        await session.setPeerConfig(agentPeer, { observeOthers: true, observeMe: true });
+        console.log(`🥗 Configured NutritionExpert: observes and can be observed`);
+      } else if (this.agentName === "MindfulnessGuide") {
+        // MindfulnessGuide observes to understand stress responses
+        await session.setPeerConfig(agentPeer, { observeOthers: true, observeMe: true });
+        console.log(`🧘 Configured MindfulnessGuide: observes and can be observed`);
       }
     } catch (error) {
       // Peer might already be in session, which is fine
@@ -333,7 +337,7 @@ Consider:
 - Is it a question that needs answering?
 - Would your response add value to the conversation?
 - Have you responded too much recently?
-- IMPORTANT: If the message is from another agent (like Socrates or BudgetBuddy), be MUCH less likely to respond unless directly asked
+- IMPORTANT: If the message is from another agent (like WellnessCoach, NutritionExpert, or MindfulnessGuide), be MUCH less likely to respond unless directly asked
 
 Only respond if you're confident you can add unique value to the conversation.
 

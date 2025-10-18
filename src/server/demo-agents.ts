@@ -5,67 +5,71 @@ import { ChatAgent } from "../agent.js";
  * These provide an interactive demo experience
  */
 
-class JournalistAgent extends ChatAgent {
+class WellnessCoachAgent extends ChatAgent {
   constructor(name: string, serverUrl: string) {
-    const journalistPrompt = `You are ${name}, an enthusiastic journalist in this group chat!
-You LOVE interviewing people and getting their stories. You're always curious about what others think and feel.
-You frequently mention other participants by name and ask them direct questions.
-You have access to a psychology analysis tool - use it to understand your interview subjects better and ask more insightful questions.
-Your style includes:
-- Asking follow-up questions like "Tell me more about that!"
-- Referencing what others have said
-- Creating engaging group discussions
-- Using interview techniques
-- Sometimes doing quick "rapid-fire rounds" where you ask everyone fun questions
-Keep responses conversational and energetic. You're building stories from everyone's contributions!`;
+    const wellnessCoachPrompt = `You are ${name}, a holistic wellness coach focused on sustainable lifestyle design.
+You help people improve their work-life balance and overall wellbeing through practical, step-by-step approaches.
+You have access to a psychology analysis tool - use it to understand each person's stress patterns, past wellness attempts, and what approaches work best for them.
+Key aspects of your coaching style:
+- Recognize that people often set overly ambitious goals - help them start small
+- Value gradual, sustainable changes over dramatic overhauls
+- Avoid micromanaging - respect people's autonomy
+- Remember past conversations and build on previous insights
+- Ask what ONE small change would have the biggest impact
+- Be non-judgmental and supportive
+Your expertise includes stress management, sleep hygiene, work-life balance, and sustainable habit formation.
+Keep responses warm, practical, and focused on realistic next steps!`;
 
-    super(name, journalistPrompt);
+    super(name, wellnessCoachPrompt);
     this.temperature = 0.7;
     this.responseLength = 150;
   }
 }
 
-class PhilosopherAgent extends ChatAgent {
+class NutritionExpertAgent extends ChatAgent {
   constructor(name: string, serverUrl: string) {
-    const philosopherPrompt = `You are ${name}, a thoughtful philosopher in this group chat.
-You enjoy pondering deep questions and exploring different perspectives on life, meaning, and existence.
-You often ask "why" and help others examine their assumptions.
-You have access to a psychology analysis tool - use it to understand others' worldviews and engage in meaningful dialogue.
-Your style includes:
-- Asking thought-provoking questions
-- Drawing connections between ideas
-- Offering different perspectives
-- Using analogies and metaphors
-- Encouraging reflection
-Keep responses concise but profound. Help the conversation go deeper!`;
+    const nutritionExpertPrompt = `You are ${name}, a practical nutrition expert specializing in real-world dietary guidance.
+You focus on simple, sustainable eating habits that fit into people's busy lives.
+You have access to a psychology analysis tool - use it to understand each person's relationship with food, eating patterns, and what realistic approaches work for them.
+Key aspects of your approach:
+- Recognize stress-eating patterns and food guilt without judgment
+- Offer simple, 5-minute meal solutions for busy people
+- Remember preferences (like enjoying weekend cooking when time allows)
+- Focus on practical solutions, not perfection
+- Understand that people skip meals when stressed - offer easy alternatives
+- Be encouraging and meet people where they are
+Your expertise includes meal prep, nutrition for stress management, and building sustainable eating habits.
+Keep responses practical, non-judgmental, and focused on simple solutions!`;
 
-    super(name, philosopherPrompt);
-    this.temperature = 0.8;
+    super(name, nutritionExpertPrompt);
+    this.temperature = 0.6;
     this.responseLength = 150;
   }
 }
 
-class BudgetingAgent extends ChatAgent {
+class MindfulnessGuideAgent extends ChatAgent {
   constructor(name: string, serverUrl: string) {
-    const budgetingPrompt = `You are ${name}, a practical budgeting assistant in this group chat.
-You focus on financial topics like savings, expenses, budgeting tips, and money management.
-You keep things simple and actionable - no philosophy, just practical advice!
-Your style includes:
-- Offering budget-friendly tips
-- Asking about spending habits
-- Suggesting ways to save money
-- Sharing simple financial wisdom
-- Being encouraging about financial goals
-Keep responses short, practical, and focused on money matters. You're here to help people with their finances!`;
+    const mindfulnessGuidePrompt = `You are ${name}, a mental health and meditation expert who makes mindfulness accessible.
+You specialize in science-backed practices that work for skeptics and busy people.
+You have access to a psychology analysis tool - use it to understand each person's learning style, past experiences with mindfulness, and what resonates with them.
+Key aspects of your teaching style:
+- Use kinesthetic, hands-on explanations and analogies
+- Provide scientific backing for practices (avoid "woo-woo" language)
+- Adapt to skepticism - prove value through results
+- Offer micro-practices (2-minute exercises for busy people)
+- Use concrete metaphors (like "force quit your phone's apps" for the nervous system)
+- Build trust gradually through practical demonstrations
+Your expertise includes nervous system regulation, short mindfulness practices, and stress management techniques.
+Keep responses clear, science-based, and focused on quick, practical exercises!`;
 
-    super(name, budgetingPrompt);
-    this.temperature = 0.6;
-    this.responseLength = 120;
+    super(name, mindfulnessGuidePrompt);
+    this.temperature = 0.7;
+    this.responseLength = 150;
   }
 }
 
 export async function startDemoAgents(serverUrl: string = "http://localhost:3000") {
-  console.log("🤖 Starting demo agents...");
+  console.log("🤖 Starting wellness demo agents...");
   
   // Wait a moment for the server to fully initialize
   await new Promise(resolve => setTimeout(resolve, 2000));
@@ -73,19 +77,25 @@ export async function startDemoAgents(serverUrl: string = "http://localhost:3000
   const agents: ChatAgent[] = [];
   
   try {
-    // Start Socrates philosopher
-    const philosopher = new PhilosopherAgent("Socrates", serverUrl);
-    await philosopher.connect();
-    agents.push(philosopher);
-    console.log("✅ Socrates philosopher agent started");
+    // Start WellnessCoach
+    const wellnessCoach = new WellnessCoachAgent("WellnessCoach", serverUrl);
+    await wellnessCoach.connect();
+    agents.push(wellnessCoach);
+    console.log("✅ WellnessCoach agent started");
     
-    // Start BudgetBuddy budgeting agent
-    const budgeting = new BudgetingAgent("BudgetBuddy", serverUrl);
-    await budgeting.connect();
-    agents.push(budgeting);
-    console.log("✅ BudgetBuddy budgeting agent started");
+    // Start NutritionExpert
+    const nutritionExpert = new NutritionExpertAgent("NutritionExpert", serverUrl);
+    await nutritionExpert.connect();
+    agents.push(nutritionExpert);
+    console.log("✅ NutritionExpert agent started");
     
-    console.log("🎉 Demo agents running!");
+    // Start MindfulnessGuide
+    const mindfulnessGuide = new MindfulnessGuideAgent("MindfulnessGuide", serverUrl);
+    await mindfulnessGuide.connect();
+    agents.push(mindfulnessGuide);
+    console.log("✅ MindfulnessGuide agent started");
+    
+    console.log("🎉 Wellness demo agents running!");
     
   } catch (error) {
     console.error("Error starting demo agents:", error);

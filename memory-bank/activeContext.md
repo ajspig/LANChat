@@ -131,7 +131,7 @@ frontend/
 ### What's Running
 - ✅ **Backend server**: Should be at http://localhost:3000/ (with Honcho insights API)
 - ✅ **Frontend dev server**: http://localhost:5173/ (with insights panel)
-- ⏳ **Demo agent**: Socrates auto-starts with server
+- ⏳ **Demo agents**: WellnessCoach, NutritionExpert, and MindfulnessGuide auto-start with server
 - ⏳ **Additional agents**: Can be started with `bun run agent <name>`
 - ⏳ **Ollama**: Can be running for local LLM (optional with OpenRouter)
 

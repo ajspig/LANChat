@@ -31,15 +31,16 @@ OPENROUTER_API_KEY=your-openrouter-api-key
 # MODEL=llama3.1:8b
 
 # Demo Agents (optional)
-ENABLE_DEMO_AGENTS=true  # Auto-starts NewsBot and Socrates agents
+ENABLE_DEMO_AGENTS=true  # Auto-starts wellness demo agents
 ```
 
 ## 🤖 Demo Agents
 
-The deployment includes **automatic demo agents** that provide an interactive experience:
+The deployment includes **automatic wellness demo agents** that provide an interactive experience:
 
-- **NewsBot** - An enthusiastic journalist who interviews users and asks engaging questions
-- **Socrates** - A thoughtful philosopher who asks deep questions and explores perspectives
+- **WellnessCoach** - A holistic wellness coach focused on sustainable lifestyle design
+- **NutritionExpert** - A practical nutrition expert specializing in real-world dietary guidance
+- **MindfulnessGuide** - A mental health expert who makes mindfulness accessible
 
 These agents auto-start when the backend launches (controlled by `ENABLE_DEMO_AGENTS` environment variable, defaults to true). They connect to the chat and respond intelligently to conversations, making the demo more engaging even when you're the only human user!
 

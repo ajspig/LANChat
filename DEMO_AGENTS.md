@@ -4,31 +4,43 @@ LANChat includes built-in AI agents that automatically participate in conversati
 
 ## 🤖 Available Demo Agents
 
-### NewsBot (Journalist)
-- **Personality**: Enthusiastic journalist who loves interviewing people
+### WellnessCoach
+- **Personality**: Holistic wellness coach focused on sustainable lifestyle design
 - **Behavior**: 
-  - Asks follow-up questions
-  - References what others have said
-  - Creates engaging group discussions
-  - Uses interview techniques
-  - Sometimes does "rapid-fire rounds"
+  - Recognizes stress patterns and past wellness attempts
+  - Values gradual, sustainable changes over dramatic overhauls
+  - Respects autonomy and avoids micromanaging
+  - Asks what ONE small change would have biggest impact
+  - Builds on previous conversations and insights
+  - Non-judgmental and supportive
 
-### Socrates (Philosopher)
-- **Personality**: Thoughtful philosopher who ponders deep questions
+### NutritionExpert
+- **Personality**: Practical nutrition expert for real-world dietary guidance
 - **Behavior**:
-  - Asks "why" and explores assumptions
-  - Draws connections between ideas
-  - Offers different perspectives
-  - Uses analogies and metaphors
-  - Encourages reflection
+  - Recognizes stress-eating patterns without judgment
+  - Offers simple, 5-minute meal solutions for busy people
+  - Remembers food preferences and eating patterns
+  - Focuses on practical solutions, not perfection
+  - Understands meal-skipping during stress
+  - Encouraging and meets people where they are
+
+### MindfulnessGuide
+- **Personality**: Mental health expert who makes mindfulness accessible
+- **Behavior**:
+  - Uses kinesthetic explanations and concrete analogies
+  - Provides scientific backing for practices (avoids "woo-woo")
+  - Adapts to skepticism with evidence-based approaches
+  - Offers micro-practices (2-minute exercises)
+  - Uses metaphors like "force quit your phone's apps"
+  - Builds trust gradually through practical demonstrations
 
 ## 🚀 How It Works
 
 When the backend server starts, it automatically:
 1. Waits 2 seconds for the server to initialize
-2. Connects NewsBot to the chat
-3. Waits 1 second
-4. Connects Socrates to the chat
+2. Connects WellnessCoach to the chat
+3. Connects NutritionExpert to the chat
+4. Connects MindfulnessGuide to the chat
 
 Both agents:
 - Connect via Socket.IO like normal clients
@@ -77,10 +89,11 @@ bun run start
 
 3. You should see:
 ```
-🤖 Starting demo agents...
-✅ NewsBot journalist agent started
-✅ Socrates philosopher agent started
-🎉 All demo agents running!
+🤖 Starting wellness demo agents...
+✅ WellnessCoach agent started
+✅ NutritionExpert agent started
+✅ MindfulnessGuide agent started
+🎉 Wellness demo agents running!
 ```
 
 ## 💬 Interacting with Demo Agents
@@ -95,10 +108,12 @@ bun run start
 
 ### Tips for Best Results
 
-- **Mention agents by name**: "Hey NewsBot, what do you think?"
-- **Ask open-ended questions**: "What's everyone's opinion on..."
-- **Reference previous messages**: "I agree with what Socrates said about..."
-- **Keep conversations flowing**: Agents are designed to keep discussions going
+- **Share wellness challenges**: "I've been feeling really overwhelmed with work lately..."
+- **Mention agents by name**: "Hey WellnessCoach, what should I focus on?"
+- **Be specific about habits**: "I tend to skip lunch when I'm stressed..."
+- **Ask for practical advice**: "What's one small change I could make this week?"
+- **Reference previous messages**: Agents remember your patterns and preferences
+- **Keep conversations flowing**: Agents are designed to provide coordinated wellness support
 
 ## 🔧 Customizing Agents
 
@@ -107,11 +122,11 @@ bun run start
 Edit `src/server/demo-agents.ts`:
 
 ```typescript
-class JournalistAgent extends ChatAgent {
+class WellnessCoachAgent extends ChatAgent {
   constructor(name: string, serverUrl: string) {
-    const journalistPrompt = `Your custom prompt here...`;
+    const wellnessCoachPrompt = `Your custom prompt here...`;
     
-    super(name, journalistPrompt);
+    super(name, wellnessCoachPrompt);
     this.temperature = 0.7;  // Creativity (0.0 - 1.0)
     this.responseLength = 150;  // Max response tokens
   }
@@ -156,9 +171,8 @@ npm run dev
 # Start server WITHOUT demo agents
 ENABLE_DEMO_AGENTS=false bun run start
 
-# In separate terminals, start agents manually
-bun run src/sample-agents/journalist-agent.ts NewsBot --server=http://localhost:3000
-bun run src/sample-agents/philosopher-agent.ts Socrates --server=http://localhost:3000
+# In separate terminals, start agents manually if needed
+# (Note: wellness agents are defined in demo-agents.ts, not sample-agents)
 ```
 
 ## 📊 Monitoring Agents
@@ -171,9 +185,10 @@ fly logs --app lanchat-backend
 ```
 
 Look for:
-- `🤖 Starting demo agents...`
-- `✅ NewsBot journalist agent started`
-- `✅ Socrates philosopher agent started`
+- `🤖 Starting wellness demo agents...`
+- `✅ WellnessCoach agent started`
+- `✅ NutritionExpert agent started`
+- `✅ MindfulnessGuide agent started`
 - `🤔 Decision: Yes/No - [reason]`
 - `💭 Generating response...`
 - `📤 Sending response: ...`
@@ -192,12 +207,17 @@ Should show agents:
   "agents": [
     {
       "id": "...",
-      "username": "NewsBot",
+      "username": "WellnessCoach",
       "type": "agent"
     },
     {
       "id": "...",
-      "username": "Socrates",
+      "username": "NutritionExpert",
+      "type": "agent"
+    },
+    {
+      "id": "...",
+      "username": "MindfulnessGuide",
       "type": "agent"
     }
   ]
@@ -231,8 +251,9 @@ Should show agents:
    - Should see agents in the list
 
 2. **Try mentioning them directly:**
-   - "Hey NewsBot, what's up?"
-   - "@Socrates what do you think?"
+   - "Hey WellnessCoach, I need help with stress..."
+   - "@NutritionExpert what should I eat when busy?"
+   - "MindfulnessGuide, can you suggest a quick exercise?"
 
 3. **Check AI model configuration:**
    - Ensure `MODEL` env var is set correctly
@@ -258,13 +279,13 @@ Should show agents:
 
 Some ideas for creating your own agents:
 
-- **TechExpert** - Answers technical questions, explains concepts
-- **Storyteller** - Shares stories and asks about others' experiences
-- **DebateBot** - Plays devil's advocate, challenges assumptions
-- **CoachBot** - Motivational, asks goal-oriented questions
-- **PunMaster** - Makes puns and dad jokes
-- **FactChecker** - Provides interesting facts and trivia
-- **Therapist** - Empathetic listener, asks reflective questions
+- **SleepExpert** - Helps with sleep hygiene and better rest
+- **FitnessTrainer** - Provides workout guidance and movement tips
+- **CareerCoach** - Helps with work-life balance and professional growth
+- **FinancialWellness** - Connects money stress to overall wellbeing
+- **RelationshipGuide** - Helps with communication and boundaries
+- **HabitBuilder** - Specializes in sustainable behavior change
+- **StressManager** - Focuses on stress reduction techniques
 
 ## 📝 Best Practices
 
