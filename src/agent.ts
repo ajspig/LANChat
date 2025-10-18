@@ -37,6 +37,13 @@ class ChatAgent {
 
   protected honcho: Honcho;
 
+  // Cache for psychology analysis results
+  protected psychologyCache: Map<string, {
+    data: any;
+    timestamp: number;
+    expiresIn: number;
+  }> = new Map();
+
   constructor(agentName: string, systemPrompt?: string) {
     this.agentName = agentName;
     this.ollama = new Ollama({ host: "http://localhost:11434" });
@@ -191,11 +198,28 @@ Feel empowered to be chatty and ask follow-up questions.
     }
   }
 
+  private shouldSkipAnalysis(message: Message): boolean {        
+    // Skip if message is from another agent
+    const agentNames = ['WellnessCoach', 'NutritionExpert', 'MindfulnessGuide', 'RoboAssistant'];
+    if (agentNames.includes(message.username)) {
+      console.log(`⏭️ Skipping analysis: message from another agent`);
+      return true;
+    }
+    // TODO: add more conditions to skip analysis for simple cases    
+    return false;
+  }
+
   private async decideAction(
     message: Message,
     recentContext: string,
     tracker: Record<string, any>,
   ): Promise<void> {
+    // Skip analysis for simple cases
+    if (this.shouldSkipAnalysis(message)) {
+      await this.generateResponse(message, recentContext, tracker);
+      return;
+    }
+
     // analyze psychology
     // search for additional context
     // response directly
@@ -461,6 +485,15 @@ JSON response:`,
     message: Message,
     recentContext: string,
   ): Promise<any> {
+    const cacheKey = `${message.username}-${this.sessionId}`;
+    const cached = this.psychologyCache.get(cacheKey);
+    
+    // Return cached result if fresh (5 minutes = 300000ms)
+    if (cached && Date.now() - cached.timestamp < cached.expiresIn) {
+      console.log(`✅ Using cached psychology analysis for ${message.username}`);
+      return cached.data;
+    }
+
     try {
       let responseText: string;
 
@@ -516,11 +549,21 @@ JSON response:`,
 
       const dialectic = JSON.parse(responseText) as Dialectic;
 
+      console.log(`🔍 Making psychology query for ${dialectic.target}...`);
       const peer = await this.honcho.peer(this.agentName);
       const dialecticResponse = await peer.chat(dialectic.question, {
         sessionId: this.sessionId || undefined,
         target: dialectic.target,
       });
+
+      // Cache the result (5 minutes = 300000ms)
+      this.psychologyCache.set(cacheKey, {
+        data: dialecticResponse,
+        timestamp: Date.now(),
+        expiresIn: 300000
+      });
+      console.log(`💾 Cached psychology analysis for ${message.username}`);
+
       return dialecticResponse;
     } catch (error) {
       console.error("Error generating response:", error);
