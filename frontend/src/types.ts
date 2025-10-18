@@ -1,38 +1,57 @@
-// Shared types for the LANChat frontend
+// Message types
+export type MessageType = 
+  | "chat"
+  | "agent_response"
+  | "system"
+  | "join"
+  | "leave"
+  | "agent_data";
 
-export const MessageType = {
-  CHAT: "chat",
-  AGENT_DATA: "agent_data",
-  SYSTEM: "system",
-  JOIN: "join",
-  LEAVE: "leave",
-  AGENT_RESPONSE: "agent_response",
-} as const;
-
-export type MessageType = typeof MessageType[keyof typeof MessageType];
-
+// Core message interface
 export interface Message {
   id: string;
-  type: MessageType | "chat" | "agent_response" | "system" | "join" | "leave" | "agent_data";
+  type: MessageType;
   username: string;
   content: string;
   metadata: {
     timestamp: string;
-    userId?: string;
-    userType?: "human" | "agent";
     [key: string]: any;
   };
 }
 
+// User and agent types
 export interface User {
   id: string;
   username: string;
   type: "human" | "agent";
   capabilities?: string[];
+  observe_me?: boolean;
 }
 
-export interface SocketEvents {
-  message: (message: Message) => void;
-  history: (messages: Message[]) => void;
-  session_id: (sessionId: string) => void;
+// Honcho Insights Types
+export interface SessionSummary {
+  short: string;
+  full: string;
+  messageCount: number;
+  lastUpdated: string;
+}
+
+export interface KnowledgeItem {
+  content: string;
+  isRecent: boolean;
+  timestamp: string;
+}
+
+export interface PeerKnowledge {
+  peerId: string;
+  peerName: string;
+  topics: KnowledgeItem[];
+}
+
+export interface PeerRelationship {
+  fromPeer: string;
+  toPeer: string;
+  sentiment: 'positive' | 'neutral' | 'negative';
+  description: string;
+  strength: number; // 0-1
 }

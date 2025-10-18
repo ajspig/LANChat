@@ -1,6 +1,14 @@
 import { useState } from 'react';
+import type { Socket } from 'socket.io-client';
+import { SessionSummary } from './SessionSummary';
+import { PeerKnowledge } from './PeerKnowledge';
+import { RelationshipDynamics } from './RelationshipDynamics';
 
-export function Insights() {
+interface InsightsProps {
+  socket: Socket | null;
+}
+
+export function Insights({ socket }: InsightsProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -19,9 +27,9 @@ export function Insights() {
             <h2>HONCHO INSIGHTS</h2>
           </div>
           <div className="insights-body">
-            <p className="insights-placeholder">
-              Real-time insights will appear here.
-            </p>
+            <SessionSummary socket={socket} />
+            <PeerKnowledge socket={socket} />
+            <RelationshipDynamics socket={socket} />
           </div>
         </div>
       )}

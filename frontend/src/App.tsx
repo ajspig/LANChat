@@ -5,7 +5,7 @@ import { useSocket } from './hooks/useSocket';
 import './styles.css';
 
 function App() {
-  const { messages, users, sessionId, sendMessage, registerUser, connected } = useSocket();
+  const { socket, messages, users, sessionId, sendMessage, registerUser, connected } = useSocket();
   const [currentUser, setCurrentUser] = useState('');
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [showUsernameModal, setShowUsernameModal] = useState(true);
@@ -86,7 +86,7 @@ function App() {
         </div>
         
         <div className="insights-section">
-          <Insights />
+          <Insights socket={socket} />
         </div>
       </main>
     </div>

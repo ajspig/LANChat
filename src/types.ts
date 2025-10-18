@@ -1,26 +1,18 @@
 // Shared types for the LAN chat application
 
 // Message types
-export enum MessageType {
-  CHAT = "chat",
-  AGENT_DATA = "agent_data",
-  SYSTEM = "system",
-  JOIN = "join",
-  LEAVE = "leave",
-  AGENT_RESPONSE = "agent_response",
-}
-
-// Core message interface
-export interface Message {
-  id: string;
-  type:
-  | MessageType
+export type MessageType = 
   | "chat"
   | "agent_response"
   | "system"
   | "join"
   | "leave"
   | "agent_data";
+
+// Core message interface
+export interface Message {
+  id: string;
+  type: MessageType;
   username: string;
   content: string;
   metadata: {
@@ -104,4 +96,3 @@ export interface Dialectic {
 export interface Search {
   query: string;
 }
-

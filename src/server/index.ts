@@ -1,8 +1,7 @@
 import { createServer } from "node:http";
 import { Server as SocketIOServer } from "socket.io";
 import { Honcho } from "@honcho-ai/sdk";
-import type { Message, User, Agent } from "../types.js";
-import { MessageType } from "../types.js";
+import type { Message, User, Agent, MessageType } from "../types.js";
 import { createAPIRoutes } from "./api.js";
 import { setupSocketIO } from "./socket.js";
 import { displayStartupInfo, print } from "./utils.js";
@@ -43,7 +42,7 @@ async function startServer() {
       for (const msg of existingMessages) {
         const message: Message = {
           id: msg.id,
-          type: MessageType.CHAT,
+          type: "chat",
           username: msg.peer_id || "unknown",
           content: msg.content,
           metadata: {

@@ -1,8 +1,7 @@
 import { Server as SocketIOServer } from "socket.io";
 import { Honcho, Session, SessionPeerConfig } from "@honcho-ai/sdk";
 import { Honcho as HonchoCore } from "@honcho-ai/core";
-import type { Message, User, Agent } from "../types.js";
-import { MessageType } from "../types.js";
+import type { Message, User, Agent, MessageType } from "../types.js";
 import { generateId, print } from "./utils.js";
 
 export function setupSocketIO(
@@ -16,7 +15,7 @@ export function setupSocketIO(
   io.on("connection", (socket) => {
     print(`new connection: ${socket.id}`, "cyan");
 
-    socket.on("register", async (data: { username: string; type?: string; capabilities?: string[] }) => {
+    socket.on("register", async (data: { username: string; type?: string; capabilities?: string[]; observe_me?: boolean }) => {
       const { username, type = "human" } = data;
 
       if (type === "agent") {
@@ -51,7 +50,7 @@ export function setupSocketIO(
       socket.emit("session_id", session.id);
 
       const joinMessage = createMessage({
-        type: MessageType.JOIN,
+        type: "join",
         username: "system",
         content: `${username} (${type}) joined the chat`,
         metadata: { joinedUser: username, userType: type },
@@ -66,7 +65,7 @@ export function setupSocketIO(
       if (!user) return;
 
       const message = createMessage({
-        type: MessageType.CHAT,
+        type: "chat",
         username: user.username,
         content: data.content,
         metadata: {
@@ -87,7 +86,7 @@ export function setupSocketIO(
       if (!agent) return;
 
       const message = createMessage({
-        type: MessageType.AGENT_DATA,
+        type: "agent_data",
         username: agent.username,
         content: data.content || "",
         metadata: {
@@ -118,7 +117,7 @@ export function setupSocketIO(
       if (!agent) return;
 
       const message = createMessage({
-        type: MessageType.AGENT_RESPONSE,
+        type: "agent_response",
         username: agent.username,
         content: data.response,
         metadata: {
@@ -138,7 +137,7 @@ export function setupSocketIO(
       const user = connectedUsers.get(socket.id) || agents.get(socket.id);
       if (user) {
         const leaveMessage = createMessage({
-          type: MessageType.LEAVE,
+          type: "leave",
           username: "system",
           content: `${user.username} (${user.type}) left the chat`,
           metadata: { leftUser: user.username, userType: user.type },
@@ -162,7 +161,7 @@ export function setupSocketIO(
       const messageType = data.messageType;
       const since = data.since ? new Date(data.since) : null;
 
-      let filteredHistory = chatHistory.filter(msg => msg.type !== MessageType.JOIN && msg.type !== MessageType.LEAVE && msg.type !== MessageType.SYSTEM);
+      let filteredHistory = chatHistory.filter(msg => msg.type !== "join" && msg.type !== "leave" && msg.type !== "system");
 
       if (messageType) {
         filteredHistory = filteredHistory.filter((msg) => msg.type === messageType);
@@ -218,7 +217,7 @@ export function setupSocketIO(
         await user_peer.setPeerConfig({ observe_me: newObserveStatus, observe_others: false });
 
         const statusMessage = createMessage({
-          type: MessageType.SYSTEM,
+          type: "system",
           username: "system",
           content: `${user.username} ${newObserveStatus ? 'enabled' : 'disabled'} observation`,
           metadata: { userId: socket.id, observeStatus: newObserveStatus },
@@ -238,6 +237,117 @@ export function setupSocketIO(
         callback({ error: `Failed to update observation status: ${error}` });
       }
     });
+
+    // Honcho Insights API endpoints
+    socket.on("get_session_summary", async (callback: Function) => {
+      try {
+        const context = await session.getContext({ summary: true, tokens: 2000 });
+        const summary = context.summary;
+        
+        callback({
+          short: summary?.content?.substring(0, 150) || "No activity yet",
+          full: summary?.content || "No detailed summary available",
+          messageCount: chatHistory.filter(msg => msg.type === "chat").length,
+          lastUpdated: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error("Error fetching session summary:", error);
+        callback({ 
+          short: "Unable to generate summary", 
+          full: "Error retrieving session summary",
+          messageCount: 0,
+          lastUpdated: new Date().toISOString()
+        });
+      }
+    });
+
+    socket.on("get_peer_knowledge", async (callback: Function) => {
+      try {
+        const allUsers = [...connectedUsers.values(), ...agents.values()];
+        const peerKnowledge = [];
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+
+        for (const user of allUsers) {
+          try {
+            const peer = await honcho.peer(user.username);
+            const response = await peer.chat(
+              "What topics have been discussed in this session? List them as bullet points.",
+              { sessionId: session.id }
+            );
+            
+            // Parse response into topics
+            const responseText = typeof response === 'string' ? response : '';
+            const topics = responseText
+              .split('\n')
+              .filter((line: string) => line.trim().startsWith('-') || line.trim().startsWith('•'))
+              .map((line: string) => ({
+                content: line.replace(/^[-•]\s*/, '').trim(),
+                isRecent: new Date() > fiveMinutesAgo, // Simplified - could be enhanced
+                timestamp: new Date().toISOString()
+              }));
+
+            peerKnowledge.push({
+              peerId: user.id,
+              peerName: user.username,
+              topics: topics.slice(0, 5) // Limit to top 5
+            });
+          } catch (peerError) {
+            console.error(`Error getting knowledge for ${user.username}:`, peerError);
+            peerKnowledge.push({
+              peerId: user.id,
+              peerName: user.username,
+              topics: []
+            });
+          }
+        }
+
+        callback(peerKnowledge);
+      } catch (error) {
+        console.error("Error fetching peer knowledge:", error);
+        callback([]);
+      }
+    });
+
+    socket.on("get_peer_relationships", async (callback: Function) => {
+      try {
+        const allUsers = [...connectedUsers.values(), ...agents.values()];
+        const relationships = [];
+
+        // Build relationship matrix
+        for (const fromUser of allUsers) {
+          for (const toUser of allUsers) {
+            if (fromUser.id === toUser.id) continue;
+
+            try {
+              const fromPeer = await honcho.peer(fromUser.username);
+              const response = await fromPeer.chat(
+                `What is your relationship with ${toUser.username}? Describe in one sentence.`,
+                { sessionId: session.id, target: toUser.username }
+              );
+
+              // Simple sentiment analysis based on keywords
+              const responseText = typeof response === 'string' ? response : '';
+              const sentiment = analyzeSentiment(responseText);
+              
+              relationships.push({
+                fromPeer: fromUser.username,
+                toPeer: toUser.username,
+                sentiment,
+                description: responseText.substring(0, 100) || "No relationship data",
+                strength: 0.5 // Could be enhanced with message frequency analysis
+              });
+            } catch (relError) {
+              console.error(`Error getting relationship ${fromUser.username} -> ${toUser.username}:`, relError);
+            }
+          }
+        }
+
+        callback(relationships);
+      } catch (error) {
+        console.error("Error fetching peer relationships:", error);
+        callback([]);
+      }
+    });
   });
 }
 
@@ -246,7 +356,7 @@ async function broadcastMessage(message: Message, io: SocketIOServer, honcho: Ho
   io.emit("message", message);
   
   // Only add messages to Honcho for chat messages from real users/agents
-  if (message.type === MessageType.CHAT && message.content) {
+  if (message.type === "chat" && message.content) {
     try {
       const peer = await honcho.peer(message.username);
       await session.addMessages([peer.message(message.content)]);
@@ -308,4 +418,17 @@ function notifyAgents(
       });
     }
   });
+}
+
+function analyzeSentiment(text: string): 'positive' | 'neutral' | 'negative' {
+  const lowerText = text.toLowerCase();
+  const positiveWords = ['good', 'great', 'excellent', 'helpful', 'friendly', 'like', 'love', 'wonderful'];
+  const negativeWords = ['bad', 'terrible', 'awful', 'unhelpful', 'rude', 'dislike', 'hate', 'poor'];
+  
+  const positiveCount = positiveWords.filter(word => lowerText.includes(word)).length;
+  const negativeCount = negativeWords.filter(word => lowerText.includes(word)).length;
+  
+  if (positiveCount > negativeCount) return 'positive';
+  if (negativeCount > positiveCount) return 'negative';
+  return 'neutral';
 }
