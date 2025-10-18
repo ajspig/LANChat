@@ -31,6 +31,77 @@ async function startServer() {
   const connectedUsers = new Map<string, User>();
   const chatHistory: Message[] = [];
   const agents = new Map<string, Agent>();
+  
+  // Summary cache
+  const summaryCache = {
+    data: null as any,
+    lastUpdated: null as Date | null,
+    isGenerating: false,
+  };
+
+  // Background summary generation function
+  async function generateSummary() {
+    if (summaryCache.isGenerating) {
+      print("summary generation already in progress, skipping", "yellow");
+      return; // Skip if already generating
+    }
+
+    const messageCount = chatHistory.filter(msg => msg.type === "chat").length;
+    
+    // Don't generate if no messages yet
+    if (messageCount === 0) {
+      print("no messages yet, skipping summary generation", "yellow");
+      summaryCache.data = {
+        short: "No messages yet. Start chatting to see a summary!",
+        full: "Once the conversation begins, this will show a summary of the key topics and interactions.",
+        messageCount: 0,
+        lastUpdated: new Date().toISOString()
+      };
+      return;
+    }
+
+    summaryCache.isGenerating = true;
+    print(`generating summary for ${messageCount} messages...`, "cyan");
+    
+    try {
+      const context = await session.getContext({ summary: true, tokens: 2000 });
+      
+      print(`context retrieved: ${JSON.stringify(context, null, 2)}`, "blue");
+      
+      const summary = context.summary;
+      
+      if (!summary || !summary.content) {
+        print("warning: no summary content in context, using fallback", "yellow");
+        summaryCache.data = {
+          short: `${messageCount} messages exchanged. Summary generation in progress...`,
+          full: "The system is processing the conversation. Please check back in a moment.",
+          messageCount,
+          lastUpdated: new Date().toISOString()
+        };
+      } else {
+        summaryCache.data = {
+          short: summary.content.substring(0, 150) || "No activity yet",
+          full: summary.content || "No detailed summary available",
+          messageCount,
+          lastUpdated: new Date().toISOString()
+        };
+        print(`summary updated successfully: ${summary.content.substring(0, 100)}...`, "green");
+      }
+      
+      summaryCache.lastUpdated = new Date();
+    } catch (error) {
+      print(`error generating summary: ${error}`, "red");
+      console.error("Full error details:", error);
+      summaryCache.data = {
+        short: `${messageCount} messages. Summary temporarily unavailable.`,
+        full: `Error retrieving session summary: ${error}`,
+        messageCount,
+        lastUpdated: new Date().toISOString()
+      };
+    } finally {
+      summaryCache.isGenerating = false;
+    }
+  }
 
   // Load existing messages if using provided session
   if (providedSessionId) {
@@ -99,7 +170,31 @@ async function startServer() {
     transports: ["websocket", "polling"],
   });
 
-  setupSocketIO(io, connectedUsers, agents, chatHistory, honcho, session);
+  // Enhanced summary generation with broadcasting
+  const generateAndBroadcastSummary = async () => {
+    await generateSummary();
+    if (summaryCache.data) {
+      io.emit("summary_updated", summaryCache.data);
+    }
+  };
+
+  setupSocketIO(io, connectedUsers, agents, chatHistory, honcho, session, summaryCache, generateAndBroadcastSummary);
+
+  // Generate initial summary after a short delay and broadcast when ready
+  setTimeout(async () => {
+    await generateSummary();
+    if (summaryCache.data) {
+      io.emit("summary_updated", summaryCache.data);
+    }
+  }, 2000);
+
+  // Update summary every 30 seconds and broadcast to all clients
+  setInterval(async () => {
+    await generateSummary();
+    if (summaryCache.data) {
+      io.emit("summary_updated", summaryCache.data);
+    }
+  }, 30000);
 
   // Start server
   print("starting LAN chat server...", "blue");

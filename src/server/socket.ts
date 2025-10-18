@@ -10,7 +10,9 @@ export function setupSocketIO(
   agents: Map<string, Agent>,
   chatHistory: Message[],
   honcho: Honcho,
-  session: Session
+  session: Session,
+  summaryCache: any,
+  generateSummary: () => Promise<void>
 ) {
   io.on("connection", (socket) => {
     print(`new connection: ${socket.id}`, "cyan");
@@ -240,24 +242,25 @@ export function setupSocketIO(
 
     // Honcho Insights API endpoints
     socket.on("get_session_summary", async (callback: Function) => {
-      try {
-        const context = await session.getContext({ summary: true, tokens: 2000 });
-        const summary = context.summary;
-        
+      // Return cached summary immediately if available
+      if (summaryCache.data) {
+        callback(summaryCache.data);
+      } else {
+        // If no cache yet, return a loading state
         callback({
-          short: summary?.content?.substring(0, 150) || "No activity yet",
-          full: summary?.content || "No detailed summary available",
+          short: "Generating summary...",
+          full: "Summary is being generated in the background",
           messageCount: chatHistory.filter(msg => msg.type === "chat").length,
           lastUpdated: new Date().toISOString()
         });
-      } catch (error) {
-        console.error("Error fetching session summary:", error);
-        callback({ 
-          short: "Unable to generate summary", 
-          full: "Error retrieving session summary",
-          messageCount: 0,
-          lastUpdated: new Date().toISOString()
-        });
+        
+        // Trigger immediate generation if not already in progress
+        if (!summaryCache.isGenerating) {
+          generateSummary().then(() => {
+            // Push updated summary to this client
+            socket.emit("summary_updated", summaryCache.data);
+          });
+        }
       }
     });
 

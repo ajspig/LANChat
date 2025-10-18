@@ -9,32 +9,34 @@ interface SessionSummaryProps {
 export function SessionSummary({ socket }: SessionSummaryProps) {
   const [summary, setSummary] = useState<SessionSummaryType | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!socket) return;
 
-    const fetchSummary = () => {
-      socket.emit('get_session_summary', (data: SessionSummaryType) => {
-        setSummary(data);
-        setLoading(false);
-      });
+    // Fetch summary immediately (will get cached version if available)
+    socket.emit('get_session_summary', (data: SessionSummaryType) => {
+      setSummary(data);
+    });
+
+    // Listen for real-time summary updates
+    const handleSummaryUpdate = (data: SessionSummaryType) => {
+      setSummary(data);
     };
 
-    fetchSummary();
-    const interval = setInterval(fetchSummary, 10000); // Refresh every 10 seconds
+    socket.on('summary_updated', handleSummaryUpdate);
 
-    return () => clearInterval(interval);
+    // Refresh every 30 seconds to stay in sync with server updates
+    const interval = setInterval(() => {
+      socket.emit('get_session_summary', (data: SessionSummaryType) => {
+        setSummary(data);
+      });
+    }, 30000);
+
+    return () => {
+      socket.off('summary_updated', handleSummaryUpdate);
+      clearInterval(interval);
+    };
   }, [socket]);
-
-  if (loading) {
-    return (
-      <div className="insight-card">
-        <h3>Session at a Glance</h3>
-        <p className="insight-loading">Loading summary...</p>
-      </div>
-    );
-  }
 
   if (!summary) return null;
 
