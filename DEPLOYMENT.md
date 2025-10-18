@@ -29,7 +29,21 @@ OPENROUTER_API_KEY=your-openrouter-api-key
 # Option B: Local Ollama (not recommended for fly.io)
 # USE_OPENROUTER=false
 # MODEL=llama3.1:8b
+
+# Demo Agents (optional)
+ENABLE_DEMO_AGENTS=true  # Auto-starts NewsBot and Socrates agents
 ```
+
+## 🤖 Demo Agents
+
+The deployment includes **automatic demo agents** that provide an interactive experience:
+
+- **NewsBot** - An enthusiastic journalist who interviews users and asks engaging questions
+- **Socrates** - A thoughtful philosopher who asks deep questions and explores perspectives
+
+These agents auto-start when the backend launches (controlled by `ENABLE_DEMO_AGENTS` environment variable, defaults to true). They connect to the chat and respond intelligently to conversations, making the demo more engaging even when you're the only human user!
+
+To disable demo agents, set `ENABLE_DEMO_AGENTS=false` in your fly.io secrets.
 
 ## Deployment Steps
 

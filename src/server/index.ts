@@ -6,6 +6,7 @@ import { MessageType } from "../types.js";
 import { createAPIRoutes } from "./api.js";
 import { setupSocketIO } from "./socket.js";
 import { displayStartupInfo, print } from "./utils.js";
+import { startDemoAgents } from "./demo-agents.js";
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -106,8 +107,18 @@ async function startServer() {
   server.listen(PORT, () => {
     print(`server listening on port ${PORT}`, "green");
     displayStartupInfo(PORT);
+    
+    // Start demo agents if ENABLE_DEMO_AGENTS is true
+    const enableDemoAgents = Bun.env.ENABLE_DEMO_AGENTS !== "false"; // Default to true
+    if (enableDemoAgents) {
+      const serverUrl = `http://localhost:${PORT}`;
+      startDemoAgents(serverUrl).catch((error) => {
+        print(`failed to start demo agents: ${error}`, "red");
+      });
+    } else {
+      print("demo agents disabled (set ENABLE_DEMO_AGENTS=true to enable)", "yellow");
+    }
   });
 }
 
 startServer().catch(console.error);
-

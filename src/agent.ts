@@ -99,7 +99,7 @@ Feel empowered to be chatty and ask follow-up questions.
       // Register as an agent
       this.socket!.emit("register", {
         username: this.agentName,
-        type: "agent",
+        type: "user", // I am unsure about how to handle this. 
       });
     });
 
