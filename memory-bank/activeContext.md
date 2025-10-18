@@ -7,6 +7,37 @@
 
 ## Recent Developments
 
+### Honcho Insights Panel Implementation (October 18, 2025) ✅
+**Achievement**: Full Honcho insights integration with real-time data display
+
+**What Was Built**:
+- **Three insight components** in the collapsible panel:
+  - **SessionSummary**: Displays session overview with short/full summaries
+    - Auto-refreshes every 10 seconds
+    - Expandable to show full context
+    - Shows message count and last updated time
+  - **PeerKnowledge**: Shows what topics each participant has discussed
+    - Auto-refreshes every 15 seconds
+    - Highlights recent topics with "NEW" badge
+    - Lists up to 5 topics per peer
+  - **RelationshipDynamics**: Displays peer-to-peer relationships
+    - Auto-refreshes every 20 seconds
+    - Shows sentiment analysis (positive/neutral/negative)
+    - Color-coded with emojis for quick scanning
+    - Groups relationships by perspective
+
+**Backend API Endpoints** (added to socket.ts):
+- `get_session_summary`: Returns Honcho session context with summary
+- `get_peer_knowledge`: Queries each peer about discussed topics
+- `get_peer_relationships`: Analyzes relationships between all peers with sentiment
+
+**Technical Implementation**:
+- Socket.IO event-based communication
+- Automatic polling at different intervals per component
+- Graceful error handling with fallback messages
+- Loading states for better UX
+- Simple sentiment analysis using keyword matching
+
 ### React Frontend Complete (October 18, 2025) ✅
 **Achievement**: Fully functional web interface built and running
 
@@ -20,7 +51,7 @@
   - Message input with send button
   - Session ID display
   - Real-time message timestamps
-- **Collapsible Insights panel** (ready for future Honcho data)
+- **Collapsible Insights panel** with three Honcho-powered components
 - **Dark/light theme system** with localStorage persistence
 - **Monospace/ASCII aesthetic** (terminal-like, no colors)
 - **Username modal** on first load (auto-generate or custom)
@@ -39,8 +70,11 @@
 frontend/
 ├── src/
 │   ├── components/
-│   │   ├── Chat.tsx          # All-in-one chat component
-│   │   └── Insights.tsx      # Collapsible insights panel
+│   │   ├── Chat.tsx                    # All-in-one chat component
+│   │   ├── Insights.tsx                # Collapsible insights panel container
+│   │   ├── SessionSummary.tsx          # Session overview with summaries
+│   │   ├── PeerKnowledge.tsx           # Topic tracking per peer
+│   │   └── RelationshipDynamics.tsx    # Peer relationship analysis
 │   ├── hooks/
 │   │   └── useSocket.ts      # Socket.IO connection logic
 │   ├── types.ts              # TypeScript types matching backend
@@ -55,18 +89,21 @@ frontend/
 
 **Design Decisions**:
 - **Monospace fonts**: Monaco, Courier New for terminal aesthetic
-- **Minimal colors**: Only grays/blacks/whites, no color-heavy design
+- **Minimal colors**: Only grays/blacks/whites, no color-heavy design (except sentiment indicators)
 - **Simple borders**: CSS borders instead of heavy ASCII art
 - **Subtle distinctions**: Dashed borders for agents vs solid for humans
 - **User switching**: Dropdown allows sending messages as different participants
 - **Single session**: One chat interface matches backend's single Honcho session
-- **Collapsible insights**: Right panel ready for future Honcho features
+- **Auto-refreshing insights**: Different intervals per component (10s/15s/20s) to balance freshness and load
+- **Graceful degradation**: Loading states and error messages when Honcho unavailable
 
 **Next Steps**:
-1. Test full integration (frontend + backend + agents)
-2. Populate insights panel with real Honcho data
-3. Deploy to Fly.io
-4. Add comprehensive testing
+1. Test full integration (frontend + backend + agents + insights)
+2. Enhance sentiment analysis algorithm
+3. Add more insight visualizations (charts, graphs)
+4. Deploy to Fly.io
+5. Add comprehensive testing
+6. Optimize Honcho API call frequency
 
 ### Agent Timeout Errors (October 17, 2025) - RESOLVED ✅
 **Symptom**: Agents experiencing TimeoutError (code 23) and slow response times
@@ -92,9 +129,10 @@ frontend/
 ## Current Development Status
 
 ### What's Running
-- ✅ **Backend server**: Should be at http://localhost:3000/
-- ✅ **Frontend dev server**: http://localhost:5173/
-- ⏳ **Agent**: Can be started with `bun run agent <name>`
+- ✅ **Backend server**: Should be at http://localhost:3000/ (with Honcho insights API)
+- ✅ **Frontend dev server**: http://localhost:5173/ (with insights panel)
+- ⏳ **Demo agent**: Socrates auto-starts with server
+- ⏳ **Additional agents**: Can be started with `bun run agent <name>`
 - ⏳ **Ollama**: Can be running for local LLM (optional with OpenRouter)
 
 ### Testing the Full Stack
@@ -186,24 +224,28 @@ const serverUrl = window.location.origin.replace(':5173', ':3000');
 ## Immediate Priorities
 
 1. **Test full stack integration**
-   - Frontend sending messages
-   - Backend receiving and broadcasting
-   - Agents responding appropriately
+   - Frontend sending messages ✅
+   - Backend receiving and broadcasting ✅
+   - Agents responding appropriately ⏳
+   - Insights panel data display ✅
 
-2. **Populate insights panel**
-   - Display Honcho session info
-   - Show participant psychology
-   - Real-time conversation metrics
+2. **Enhance insights panel**
+   - ✅ Display Honcho session summaries
+   - ✅ Show peer knowledge state
+   - ✅ Display relationship dynamics
+   - ⏳ Add visualization (charts/graphs)
+   - ⏳ Improve sentiment analysis algorithm
 
 3. **Deploy to Fly.io**
    - Test Docker build
-   - Deploy frontend
+   - Deploy backend + frontend
    - Configure production URLs
+   - Test Honcho integration in production
 
 4. **Add testing**
-   - Component tests (Vitest ready)
-   - Integration tests
-   - E2E tests
+   - Component tests for insights (Vitest ready)
+   - Integration tests for Socket.IO events
+   - E2E tests for full chat flow
 
 ## Recent Commands
 
@@ -230,4 +272,4 @@ None blocking - ready for testing and deployment!
 
 ---
 
-**Last Updated**: October 18, 2025 at 10:42 AM EDT
+**Last Updated**: October 18, 2025 at 1:08 PM EDT
