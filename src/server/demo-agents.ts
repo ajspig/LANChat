@@ -54,22 +54,13 @@ export async function startDemoAgents(serverUrl: string = "http://localhost:3000
   const agents: ChatAgent[] = [];
   
   try {
-    // Start NewsBot journalist
-    const journalist = new JournalistAgent("NewsBot", serverUrl);
-    await journalist.connect();
-    agents.push(journalist);
-    console.log("✅ NewsBot journalist agent started");
-    
-    // Wait a moment between agent connections
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
     // Start Socrates philosopher
     const philosopher = new PhilosopherAgent("Socrates", serverUrl);
     await philosopher.connect();
     agents.push(philosopher);
     console.log("✅ Socrates philosopher agent started");
     
-    console.log("🎉 All demo agents running!");
+    console.log("🎉 Demo agent running!");
     
   } catch (error) {
     console.error("Error starting demo agents:", error);
