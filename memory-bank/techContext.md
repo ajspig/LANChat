@@ -38,12 +38,40 @@
   - Semantic search (vector-based)
   - Memory and representation storage
 
-#### Client-Side
+#### Client-Side (Terminal)
 - **Socket.IO Client v4.8.1**: WebSocket client library
 - **Chalk v5.4.1**: Terminal string styling
   - Colored output
   - Text formatting
   - ANSI escape codes
+
+#### Frontend (Web)
+- **React v18.3.1**: UI library
+  - Functional components with hooks
+  - TypeScript support
+  - Fast refresh in development
+  
+- **Vite v6.0.1**: Build tool and dev server
+  - Fast HMR (Hot Module Replacement)
+  - Native ES modules
+  - Optimized production builds
+  - Rolldown bundler (experimental)
+
+- **TypeScript v5.6.3**: Type-safe JavaScript
+  - Strict mode enabled
+  - Type inference
+  - IDE integration
+
+- **Socket.IO Client v4.8.1**: Real-time WebSocket connection
+  - Auto-reconnection
+  - Event-based messaging
+  - Transport fallback
+
+- **Vitest v2.1.8**: Testing framework
+  - Vite-native test runner
+  - Compatible with Jest API
+  - Fast parallel execution
+  - jsdom v25.0.1 for DOM testing
 
 ### TypeScript Configuration
 
@@ -140,7 +168,7 @@ HONCHO_BASE_URL=http://localhost:8000
 
 ## Dependencies
 
-### Production Dependencies
+### Production Dependencies (Backend)
 ```json
 {
   "@honcho-ai/sdk": "^1.5.0",    // Conversational AI SDK
@@ -152,11 +180,34 @@ HONCHO_BASE_URL=http://localhost:8000
 }
 ```
 
-### Development Dependencies
+### Production Dependencies (Frontend)
+```json
+{
+  "react": "^18.3.1",             // UI library
+  "react-dom": "^18.3.1",         // React DOM renderer
+  "socket.io-client": "^4.8.1"    // WebSocket client
+}
+```
+
+### Development Dependencies (Backend)
 ```json
 {
   "@types/bun": "latest",         // Bun type definitions
   "@types/node": "^24.1.0"        // Node.js type definitions
+}
+```
+
+### Development Dependencies (Frontend)
+```json
+{
+  "@types/react": "^18.3.12",     // React type definitions
+  "@types/react-dom": "^18.3.1",  // React DOM type definitions
+  "@vitejs/plugin-react": "^4.3.4", // Vite React plugin
+  "@vitest/ui": "^2.1.8",         // Vitest UI
+  "typescript": "^5.6.3",         // TypeScript compiler
+  "vite": "^6.0.1",               // Build tool
+  "vitest": "^2.1.8",             // Testing framework
+  "jsdom": "^25.0.1"              // DOM implementation for tests
 }
 ```
 
@@ -169,11 +220,17 @@ HONCHO_BASE_URL=http://localhost:8000
 
 ## Technical Constraints
 
-### Bun-Specific Features Used
+### Backend (Bun-Specific Features)
 - **Native TypeScript**: No build step required
 - **Bun.env**: Environment variable access
 - **Top-level await**: Used throughout
 - **import.meta.main**: Script detection
+
+### Frontend (Browser Compatibility)
+- **Modern browsers**: ES2020+ features
+- **Node 20+**: Required for Vite development
+- **WebSocket support**: Required for real-time features
+- **LocalStorage**: Used for theme persistence
 
 ### Breaking Changes from Node.js
 - `process.argv` still works but Bun-specific APIs preferred
@@ -181,10 +238,17 @@ HONCHO_BASE_URL=http://localhost:8000
 - Native crypto/fetch available globally
 
 ### System Requirements
+
+**Backend**:
 - **OS**: macOS or Linux (Windows via WSL)
 - **Memory**: 4GB minimum (8GB+ for LLMs)
 - **Disk**: 10GB for Ollama models
 - **Network**: LAN connectivity required
+
+**Frontend Development**:
+- **Node.js**: 20.19+ required for Vite
+- **Memory**: 2GB minimum
+- **Browser**: Modern evergreen browsers (Chrome, Firefox, Safari, Edge)
 
 ## External Service Dependencies
 
@@ -356,24 +420,83 @@ socket.on('message', (message) => {
 
 ## Build and Deployment
 
-### Development Mode
+### Backend
+
+**Development Mode**:
 ```bash
 bun dev  # Auto-restarts on file changes
 ```
 
-### Production Build
+**Production Build**:
 ```bash
 bun build src/server/index.ts --outdir ./dist --target bun
 ```
 
 Creates optimized bundle in `dist/` directory.
 
-### Type Checking
+**Type Checking**:
 ```bash
 bun type-check  # Runs tsc --noEmit
 ```
 
-No JavaScript output, just type validation.
+### Frontend
+
+**Development Mode**:
+```bash
+cd frontend
+npm run dev  # Starts Vite dev server on port 5173
+```
+
+**Production Build**:
+```bash
+cd frontend
+npm run build  # Builds to dist/ directory
+```
+
+**Preview Production Build**:
+```bash
+npm run preview  # Serves production build locally
+```
+
+**Type Checking**:
+```bash
+cd frontend
+npx tsc --noEmit  # Type check without emitting files
+```
+
+**Testing**:
+```bash
+cd frontend
+npm test  # Runs Vitest
+npm run test:ui  # Opens Vitest UI
+```
+
+### Docker Deployment (Frontend)
+
+**Build Image**:
+```bash
+cd frontend
+docker build -t lanchat-frontend .
+```
+
+**Run Container**:
+```bash
+docker run -p 80:80 lanchat-frontend
+```
+
+### Fly.io Deployment (Frontend)
+
+**First Time Setup**:
+```bash
+cd frontend
+fly auth login
+fly launch
+```
+
+**Deploy Updates**:
+```bash
+fly deploy
+```
 
 ## Testing Strategy
 
@@ -461,26 +584,50 @@ curl http://localhost:8000/health
 
 ## Common Issues and Solutions
 
-### Issue: "Connection refused"
-**Cause**: Server not running or wrong port
-**Solution**: Verify server running on correct port
+### Backend Issues
 
-### Issue: "Ollama not found"
-**Cause**: Ollama service not running
-**Solution**: `ollama serve` in separate terminal
+**Issue: "Connection refused"**
+- **Cause**: Server not running or wrong port
+- **Solution**: Verify server running on correct port
 
-### Issue: "Model not found"
-**Cause**: Model not downloaded
-**Solution**: `ollama pull llama3.1:8b`
+**Issue: "Ollama not found"**
+- **Cause**: Ollama service not running
+- **Solution**: `ollama serve` in separate terminal
 
-### Issue: "Honcho warnings"
-**Cause**: Honcho service unavailable
-**Solution**: Start Honcho or use basic mode (warnings are normal)
+**Issue: "Model not found"**
+- **Cause**: Model not downloaded
+- **Solution**: `ollama pull llama3.1:8b`
 
-### Issue: "Empty agent responses"
-**Cause**: Model temperature too low or wrong model
-**Solution**: Check MODEL env var, adjust temperature
+**Issue: "Honcho warnings"**
+- **Cause**: Honcho service unavailable
+- **Solution**: Start Honcho or use basic mode (warnings are normal)
 
-### Issue: "Agent not responding"
-**Cause**: Decision logic filtered response
-**Solution**: Check decision logs, adjust `shouldRespond` logic
+**Issue: "Empty agent responses"**
+- **Cause**: Model temperature too low or wrong model
+- **Solution**: Check MODEL env var, adjust temperature
+
+**Issue: "Agent not responding"**
+- **Cause**: Decision logic filtered response
+- **Solution**: Check decision logs, adjust `shouldRespond` logic
+
+### Frontend Issues
+
+**Issue: "Cannot find module 'vite'"**
+- **Cause**: Dependencies not installed or wrong Node version
+- **Solution**: `npm install` and ensure Node 20+
+
+**Issue: "WebSocket connection failed"**
+- **Cause**: Backend not running or wrong URL
+- **Solution**: Verify backend at http://localhost:3000/
+
+**Issue: "Module not found @rolldown/binding"**
+- **Cause**: npm optional dependencies bug
+- **Solution**: Delete node_modules and package-lock.json, then `npm install`
+
+**Issue: "Unsupported engine" warnings**
+- **Cause**: Node version mismatch
+- **Solution**: Upgrade to Node 20+ via `brew install node@20`
+
+**Issue: "Port 5173 already in use"**
+- **Cause**: Dev server already running
+- **Solution**: Kill existing process or use different port in vite.config.ts
