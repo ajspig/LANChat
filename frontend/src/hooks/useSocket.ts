@@ -8,7 +8,7 @@ interface UseSocketReturn {
   messages: Message[];
   users: User[];
   sessionId: string;
-  sendMessage: (content: string, as: string) => void;
+  sendMessage: (content: string) => void;
   registerUser: (username: string) => void;
 }
 
@@ -63,7 +63,7 @@ export function useSocket(): UseSocketReturn {
     };
   }, []);
 
-  const sendMessage = useCallback((content: string, as: string) => {
+  const sendMessage = useCallback((content: string) => {
     if (socket && content.trim()) {
       socket.emit('chat', { content: content.trim() });
     }

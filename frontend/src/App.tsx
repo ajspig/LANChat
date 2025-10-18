@@ -35,10 +35,6 @@ function App() {
     document.documentElement.setAttribute('data-theme', newTheme);
   };
 
-  const handleUserChange = (username: string) => {
-    setCurrentUser(username);
-  };
-
   if (showUsernameModal) {
     return (
       <div className="modal-overlay">
@@ -86,7 +82,6 @@ function App() {
             currentUser={currentUser}
             sessionId={sessionId}
             onSendMessage={sendMessage}
-            onUserChange={handleUserChange}
           />
         </div>
         

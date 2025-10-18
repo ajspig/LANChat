@@ -7,14 +7,12 @@ interface ChatProps {
   users: User[];
   currentUser: string;
   sessionId: string;
-  onSendMessage: (content: string, as: string) => void;
-  onUserChange: (username: string) => void;
+  onSendMessage: (content: string) => void;
 }
 
-export function Chat({ messages, users, currentUser, sessionId, onSendMessage, onUserChange }: ChatProps) {
+export function Chat({ messages, users, currentUser, sessionId, onSendMessage }: ChatProps) {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const humanUsers = users.filter(u => u.type === 'human');
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -23,7 +21,7 @@ export function Chat({ messages, users, currentUser, sessionId, onSendMessage, o
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (inputValue.trim()) {
-      onSendMessage(inputValue, currentUser);
+      onSendMessage(inputValue);
       setInputValue('');
     }
   };
@@ -73,25 +71,12 @@ export function Chat({ messages, users, currentUser, sessionId, onSendMessage, o
       </div>
 
       <form className="message-input-form" onSubmit={handleSubmit}>
-        <div className="input-row">
-          <label htmlFor="user-select" className="input-label">Sending as:</label>
-          <select 
-            id="user-select"
-            value={currentUser} 
-            onChange={(e) => onUserChange(e.target.value)}
-            className="user-select"
-          >
-            {humanUsers.map(user => (
-              <option key={user.id} value={user.username}>{user.username}</option>
-            ))}
-          </select>
-        </div>
-        <div className="input-row">
+        <div className="input-row single-row">
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Type a message..."
+            placeholder={`Type a message as ${currentUser}...`}
             className="message-input"
           />
           <button type="submit" className="send-button">▶</button>

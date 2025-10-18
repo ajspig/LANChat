@@ -198,30 +198,12 @@ body {
   padding: 1rem;
   border-top: 1px solid var(--border-color);
   background: var(--bg-secondary);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
 }
 
 .input-row {
   display: flex;
   gap: 0.5rem;
   align-items: center;
-}
-
-.input-label {
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.user-select {
-  flex: 1;
-  padding: 0.5rem;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 13px;
 }
 
 .message-input {
@@ -234,8 +216,7 @@ body {
   font-size: 13px;
 }
 
-.message-input:focus,
-.user-select:focus {
+.message-input:focus {
   outline: none;
   border-color: var(--accent);
 }
