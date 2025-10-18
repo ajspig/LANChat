@@ -40,7 +40,7 @@ export function Chat({ messages, users, currentUser, sessionId, onSendMessage }:
       <div className="chat-header">
         <div className="session-info">
           <span className="label">HONCHO LAN CHAT</span>
-          {sessionId && <span className="session-id">Session: {sessionId.slice(0, 8)}</span>}
+          {sessionId && <span className="session-id">Session: {sessionId}</span>}
         </div>
         <div className="user-list">
           {users.map(user => (
