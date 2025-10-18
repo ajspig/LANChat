@@ -17,7 +17,7 @@ const OPENROUTER_API_KEY = Bun.env.OPENROUTER_API_KEY;
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-const AGENT_NAME = args.find((arg) => !arg.startsWith("--")) || "Assistant";
+const AGENT_NAME = args.find((arg) => !arg.startsWith("--")) || "RoboAssistant";
 const serverArg = args.find((arg) => arg.startsWith("--server="));
 const SERVER_URL = serverArg
   ? serverArg.split("=")[1]
@@ -96,10 +96,10 @@ Feel empowered to be chatty and ask follow-up questions.
     this.socket.on("connect", () => {
       console.log("✅ Connected to chat server");
 
-      // Register as a regular user (not as agent type)
+      // Register as an agent
       this.socket!.emit("register", {
         username: this.agentName,
-        type: "user",
+        type: "agent",
       });
     });
 
@@ -359,9 +359,33 @@ JSON response:`,
 
   private async search(message: Message, recentContext: string): Promise<any> {
     try {
-      const response = await this.ollama.generate({
-        model: MODEL,
-        prompt: `You are ${this.agentName} in a group chat. You want to search the conversation history to get more context on something.
+      let responseText: string;
+
+      if (USE_OPENROUTER) {
+        responseText = await this.callOpenRouter([
+          {
+            role: "user",
+            content: `You are ${this.agentName} in a group chat. You want to search the conversation history to get more context on something.
+
+Recent conversation:
+${recentContext}
+
+Latest message from ${message.username}: "${message.content}"
+
+Decide on a semantic query to search for in the conversation history
+
+Respond with a JSON object with this exact format:
+{
+  "query": Word or Phrase you want to search to get more context,
+}
+
+JSON response:`
+          }
+        ], true);
+      } else {
+        const response = await this.ollama.generate({
+          model: MODEL,
+          prompt: `You are ${this.agentName} in a group chat. You want to search the conversation history to get more context on something.
 
 Recent conversation:
 ${recentContext}
@@ -376,14 +400,16 @@ Respond with a JSON object with this exact format:
 }
 
 JSON response:`,
-        format: "json",
-        options: {
-          temperature: 0.3,
-          num_predict: 100,
-        },
-      });
+          format: "json",
+          options: {
+            temperature: 0.3,
+            num_predict: 100,
+          },
+        });
+        responseText = response.response;
+      }
 
-      const search = JSON.parse(response.response) as Search;
+      const search = JSON.parse(responseText) as Search;
 
       const session = await this.honcho.session(this.sessionId || "");
       const semanticResponse = await session.search(search.query);
@@ -399,9 +425,34 @@ JSON response:`,
     recentContext: string,
   ): Promise<any> {
     try {
-      const response = await this.ollama.generate({
-        model: MODEL,
-        prompt: `You are ${this.agentName} in a group chat. You want to analyze the psychology of a participant more deeply to understand how to best respond.
+      let responseText: string;
+
+      if (USE_OPENROUTER) {
+        responseText = await this.callOpenRouter([
+          {
+            role: "user",
+            content: `You are ${this.agentName} in a group chat. You want to analyze the psychology of a participant more deeply to understand how to best respond.
+
+Recent conversation:
+${recentContext}
+
+Latest message from ${message.username}: "${message.content}"
+
+Decide who you want to ask a question about and what question you want to ask 
+
+Respond with a JSON object with this exact format:
+{
+  "target": string,
+  "question": "What do you want to know about the target that would help you respond?",
+}
+
+JSON response:`
+          }
+        ], true);
+      } else {
+        const response = await this.ollama.generate({
+          model: MODEL,
+          prompt: `You are ${this.agentName} in a group chat. You want to analyze the psychology of a participant more deeply to understand how to best respond.
 
 Recent conversation:
 ${recentContext}
@@ -417,14 +468,16 @@ Respond with a JSON object with this exact format:
 }
 
 JSON response:`,
-        format: "json",
-        options: {
-          temperature: 0.3,
-          num_predict: 100,
-        },
-      });
+          format: "json",
+          options: {
+            temperature: 0.3,
+            num_predict: 100,
+          },
+        });
+        responseText = response.response;
+      }
 
-      const dialectic = JSON.parse(response.response) as Dialectic;
+      const dialectic = JSON.parse(responseText) as Dialectic;
 
       const peer = await this.honcho.peer(this.agentName);
       const dialecticResponse = await peer.chat(dialectic.question, {
