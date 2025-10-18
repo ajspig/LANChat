@@ -20,8 +20,8 @@ export function useSocket(): UseSocketReturn {
   const [sessionId, setSessionId] = useState('');
 
   useEffect(() => {
-    // Auto-detect server from current location
-    const serverUrl = window.location.origin.replace(':5173', ':3000');
+    // Use environment variable for backend URL, fallback to auto-detect for local dev
+    const serverUrl = import.meta.env.VITE_BACKEND_URL || window.location.origin.replace(':5173', ':3000');
     const newSocket = io(serverUrl, {
       transports: ['websocket', 'polling']
     });
