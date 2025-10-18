@@ -117,6 +117,14 @@ docker run -p 8080:80 lanchat-frontend
 # Visit http://localhost:8080
 ```
 
+## Known Build Issues (Fixed)
+
+The following issues have been resolved in the codebase:
+
+1. **TypeScript Build Errors**: Test files are now excluded from production builds via `tsconfig.app.json`
+2. **Enum Syntax**: Converted `MessageType` enum to const object to be compatible with `erasableSyntaxOnly` TypeScript flag
+3. **Docker Build Optimization**: Added `.dockerignore` files to exclude unnecessary files from both backend and frontend builds
+
 ## Configuration Files
 
 ### Backend (`fly.toml`)

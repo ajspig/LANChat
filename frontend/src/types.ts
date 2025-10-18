@@ -1,13 +1,15 @@
 // Shared types for the LANChat frontend
 
-export enum MessageType {
-  CHAT = "chat",
-  AGENT_DATA = "agent_data",
-  SYSTEM = "system",
-  JOIN = "join",
-  LEAVE = "leave",
-  AGENT_RESPONSE = "agent_response",
-}
+export const MessageType = {
+  CHAT: "chat",
+  AGENT_DATA: "agent_data",
+  SYSTEM: "system",
+  JOIN: "join",
+  LEAVE: "leave",
+  AGENT_RESPONSE: "agent_response",
+} as const;
+
+export type MessageType = typeof MessageType[keyof typeof MessageType];
 
 export interface Message {
   id: string;
