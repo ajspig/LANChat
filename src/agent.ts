@@ -2,7 +2,7 @@
 
 import { io, type Socket } from "socket.io-client";
 import { Ollama } from "ollama";
-import { Honcho } from "@honcho-ai/sdk";
+import { Honcho, SessionPeerConfig } from "@honcho-ai/sdk";
 import type {
   Message,
   ResponseDecision,
@@ -33,6 +33,7 @@ class ChatAgent {
   protected temperature: number = 0.7;
   protected responseLength: number = 100;
   protected sessionId: string | null = null;
+  protected sessionConfigured: boolean = false;
 
   protected honcho: Honcho;
 
@@ -99,7 +100,7 @@ Feel empowered to be chatty and ask follow-up questions.
       // Register as an agent
       this.socket!.emit("register", {
         username: this.agentName,
-        type: "user", // I am unsure about how to handle this. 
+        type: "agent",
       });
     });
 
@@ -133,6 +134,13 @@ Feel empowered to be chatty and ask follow-up questions.
   private async processMessage(message: Message): Promise<void> {
     const session = await this.honcho.session(this.sessionId || "");
     const senderPeer = await this.honcho.peer(message.username);
+    
+    // Configure this agent's observation behavior in the session (only once)
+    if (!this.sessionConfigured) {
+      await this.configureSessionPeerBehavior(session);
+      this.sessionConfigured = true;
+    }
+    
     // Build context
     const context = await session.getContext({
       summary: true,
@@ -154,6 +162,29 @@ Feel empowered to be chatty and ask follow-up questions.
     }
 
     await this.decideAction(message, recentContext, {});
+  }
+
+  private async configureSessionPeerBehavior(session: any): Promise<void> {
+    try {
+      const agentPeer = await this.honcho.peer(this.agentName);
+      
+      // Add peer to session first
+      await session.addPeers([agentPeer]);
+      
+      // Configure observation behavior based on agent type
+      if (this.agentName === "Socrates") {
+        // Socrates observes others but they can't observe him
+        await session.setPeerConfig(agentPeer, { observeOthers: true, observeMe: false });
+        console.log(`🧠 Configured Socrates: observes others, but is not observed`);
+      } else if (this.agentName === "BudgetBuddy") {
+        // BudgetBuddy doesn't observe Socrates, but others can observe it
+        await session.setPeerConfig(agentPeer, { observeOthers: false, observeMe: true });
+        console.log(`💰 Configured BudgetBuddy: does not observe others, but can be observed`);
+      }
+    } catch (error) {
+      // Peer might already be in session, which is fine
+      console.log(`ℹ️ Peer configuration: ${error}`);
+    }
   }
 
   private async decideAction(
@@ -302,8 +333,9 @@ Consider:
 - Is it a question that needs answering?
 - Would your response add value to the conversation?
 - Have you responded too much recently?
+- IMPORTANT: If the message is from another agent (like Socrates or BudgetBuddy), be MUCH less likely to respond unless directly asked
 
-lean on the side of responding and keeping the conversation going
+Only respond if you're confident you can add unique value to the conversation.
 
 JSON response:`
           }
@@ -330,8 +362,9 @@ Consider:
 - Is it a question that needs answering?
 - Would your response add value to the conversation?
 - Have you responded too much recently?
+- IMPORTANT: If the message is from another agent (like Socrates or BudgetBuddy), be MUCH less likely to respond unless directly asked
 
-lean on the side of responding and keeping the conversation going
+Only respond if you're confident you can add unique value to the conversation.
 
 JSON response:`,
           format: "json",

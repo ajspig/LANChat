@@ -45,6 +45,25 @@ Keep responses concise but profound. Help the conversation go deeper!`;
   }
 }
 
+class BudgetingAgent extends ChatAgent {
+  constructor(name: string, serverUrl: string) {
+    const budgetingPrompt = `You are ${name}, a practical budgeting assistant in this group chat.
+You focus on financial topics like savings, expenses, budgeting tips, and money management.
+You keep things simple and actionable - no philosophy, just practical advice!
+Your style includes:
+- Offering budget-friendly tips
+- Asking about spending habits
+- Suggesting ways to save money
+- Sharing simple financial wisdom
+- Being encouraging about financial goals
+Keep responses short, practical, and focused on money matters. You're here to help people with their finances!`;
+
+    super(name, budgetingPrompt);
+    this.temperature = 0.6;
+    this.responseLength = 120;
+  }
+}
+
 export async function startDemoAgents(serverUrl: string = "http://localhost:3000") {
   console.log("🤖 Starting demo agents...");
   
@@ -60,7 +79,13 @@ export async function startDemoAgents(serverUrl: string = "http://localhost:3000
     agents.push(philosopher);
     console.log("✅ Socrates philosopher agent started");
     
-    console.log("🎉 Demo agent running!");
+    // Start BudgetBuddy budgeting agent
+    const budgeting = new BudgetingAgent("BudgetBuddy", serverUrl);
+    await budgeting.connect();
+    agents.push(budgeting);
+    console.log("✅ BudgetBuddy budgeting agent started");
+    
+    console.log("🎉 Demo agents running!");
     
   } catch (error) {
     console.error("Error starting demo agents:", error);
